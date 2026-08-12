@@ -1,0 +1,54 @@
+%% LibraryService — Vertical Slice Architecture
+%% Portable: GitHub, GitLab, VS Code (Mermaid), https://mermaid.live
+
+flowchart TB
+  FE["Frontend Vite :5173"]
+  Tests["Integration tests"]
+
+  subgraph host["Program.cs — minimal hosting"]
+    Infra["AddInfrastructure\nJWT · CORS · Swagger · Npgsql"]
+    Discover["AddFeatureEndpoints\nescanea IEndpoint"]
+    Pipe["CORS → AuthN → AuthZ"]
+    Map["MapFeatureEndpoints"]
+    Infra --> Discover --> Pipe --> Map
+  end
+
+  subgraph features["Features — un folder por caso de uso"]
+    Login["LoginEndpoint\nPOST /login\nanonymous · 200 token | 401"]
+    GetAll["GetAllLibraries\nGET /api/libraries"]
+    GetById["GetLibraryById\nGET /api/libraries/{id}"]
+    Create["CreateLibrary\nPOST /api/libraries · 200"]
+    Update["UpdateLibrary\nPUT /api/libraries/{id} · 204/404"]
+    Delete["DeleteLibrary\nDELETE /api/libraries/{id} · 204/404"]
+    GetBooks["GetBooksByLibrary\nGET .../books · JWT\n200 | 404 | 401"]
+    AddBook["AddBookToLibrary\nPOST .../books · 201/404"]
+  end
+
+  subgraph shared["Shared kernel"]
+    IEp["IEndpoint + discovery"]
+    Jwt["JwtSettings + bearer"]
+    Db["LibraryContext · Book · Library"]
+  end
+
+  PG[("PostgreSQL")]
+
+  FE --> host
+  Tests --> host
+  Map --> Login
+  Map --> GetAll
+  Map --> GetById
+  Map --> Create
+  Map --> Update
+  Map --> Delete
+  Map --> GetBooks
+  Map --> AddBook
+  Login --> Jwt
+  GetBooks --> Jwt
+  GetAll --> Db
+  GetById --> Db
+  Create --> Db
+  Update --> Db
+  Delete --> Db
+  GetBooks --> Db
+  AddBook --> Db
+  Db --> PG

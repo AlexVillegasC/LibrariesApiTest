@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1280" width="1100" height="1280" role="img" aria-labelledby="title desc">
+  <title id="title">LibraryService  Vertical Slice Architecture</title>
+  <desc id="desc">Arquitectura del API ASP.NET Core 8 organizada por casos de uso. Cada slice posee su endpoint HTTP; el kernel compartido es EF Core, JWT y el descubrimiento de IEndpoint.</desc>
+  <style>
+    text { font-family: Segoe UI, Helvetica, Arial, sans-serif; fill: #1a1a1a; }
+    .muted { fill: #5c5c5c; }
+    .white { fill: #fff; }
+    .small { font-size: 12px; }
+    .label { font-size: 13px; }
+    .title { font-size: 22px; font-weight: 700; }
+    .subtitle { font-size: 13px; fill: #5c5c5c; }
+    .h { font-size: 14px; font-weight: 700; }
+    .mono { font-family: Consolas, ui-monospace, monospace; font-size: 11px; }
+  </style>
+
+  <rect width="1100" height="1280" fill="#f7f7f5"/>
+
+  <text x="40" y="42" class="title">LibraryService  Vertical Slice Architecture</text>
+  <text x="40" y="64" class="subtitle">ASP.NET Core 8 · Minimal APIs · un folder por caso de uso · sin MediatR ni repositorios</text>
+
+  <!-- Clients -->
+  <rect x="40" y="88" width="1020" height="70" rx="8" fill="#fff" stroke="#d0d0cc"/>
+  <text x="56" y="112" class="h">Clientes</text>
+  <rect x="56" y="124" width="220" height="22" rx="4" fill="#2f6fed"/>
+  <text x="166" y="139" class="white small" text-anchor="middle">Frontend Vite :5173</text>
+  <rect x="288" y="124" width="200" height="22" rx="4" fill="#2f6fed"/>
+  <text x="388" y="139" class="white small" text-anchor="middle">Integration tests</text>
+  <text x="510" y="140" class="muted small">HTTP JSON · CORS localhost:5173</text>
+
+  <!-- Arrow -->
+  <line x1="550" y1="158" x2="550" y2="186" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Host -->
+  <rect x="40" y="190" width="1020" height="118" rx="8" fill="#fff" stroke="#d0d0cc"/>
+  <text x="56" y="214" class="h">Program.cs  minimal hosting</text>
+  <g>
+    <rect x="56" y="230" width="230" height="58" rx="6" fill="#f0f0ec" stroke="#d0d0cc"/>
+    <text x="171" y="254" class="label" text-anchor="middle">AddInfrastructure</text>
+    <text x="171" y="272" class="muted small" text-anchor="middle">JWT · CORS · Swagger · Npgsql</text>
+  </g>
+  <g>
+    <rect x="312" y="230" width="230" height="58" rx="6" fill="#f0f0ec" stroke="#d0d0cc"/>
+    <text x="427" y="254" class="label" text-anchor="middle">AddFeatureEndpoints</text>
+    <text x="427" y="272" class="muted small" text-anchor="middle">escanea tipos IEndpoint</text>
+  </g>
+  <g>
+    <rect x="568" y="230" width="230" height="58" rx="6" fill="#f0f0ec" stroke="#d0d0cc"/>
+    <text x="683" y="254" class="label" text-anchor="middle">Pipeline</text>
+    <text x="683" y="272" class="muted small" text-anchor="middle">CORS ’ AuthN ’ AuthZ</text>
+  </g>
+  <g>
+    <rect x="824" y="230" width="216" height="58" rx="6" fill="#2f6fed"/>
+    <text x="932" y="254" class="white label" text-anchor="middle">MapFeatureEndpoints</text>
+    <text x="932" y="272" class="white small" text-anchor="middle">registra las 8 rutas</text>
+  </g>
+  <text x="286" y="268" class="muted" font-size="16">’</text>
+  <text x="542" y="268" class="muted" font-size="16">’</text>
+  <text x="798" y="268" class="muted" font-size="16">’</text>
+
+  <line x1="550" y1="308" x2="550" y2="336" stroke="#1a1a1a" stroke-width="1.5"/>
+
+  <!-- Features -->
+  <rect x="40" y="340" width="1020" height="560" rx="8" fill="#fff" stroke="#d0d0cc"/>
+  <text x="56" y="364" class="h">Features  cada slice = ruta + request/response + handler</text>
+  <text x="56" y="382" class="muted small">No hay ILibrariesService / IBooksService. Cada endpoint usa LibraryContext directo.</text>
+
+  <!-- Auth column -->
+  <rect x="56" y="400" width="310" height="478" rx="8" fill="#f7f7f5" stroke="#d0d0cc"/>
+  <text x="72" y="424" class="h">Auth</text>
+  <rect x="72" y="440" width="278" height="88" rx="6" fill="#fff" stroke="#2f6fed" stroke-width="1.5"/>
+  <text x="86" y="462" class="label">LoginEndpoint</text>
+  <text x="86" y="480" class="mono">POST /login</text>
+  <text x="86" y="496" class="muted small">AllowAnonymous</text>
+  <text x="86" y="512" class="muted small">admin / 1234 ’ { token } · 401</text>
+  <text x="72" y="552" class="muted small">JWT se firma aquí. El middleware</text>
+  <text x="72" y="568" class="muted small">vive en Shared/Auth.</text>
+
+  <!-- Libraries column -->
+  <rect x="382" y="400" width="310" height="478" rx="8" fill="#f7f7f5" stroke="#d0d0cc"/>
+  <text x="398" y="424" class="h">Libraries</text>
+  <g font-size="12">
+    <rect x="398" y="440" width="278" height="72" rx="6" fill="#fff" stroke="#d0d0cc"/>
+    <text x="412" y="460">GetAllLibraries</text>
+    <text x="412" y="478" class="mono">GET /api/libraries</text>
+    <text x="412" y="494" class="muted small">200 array (vacío si no hay)</text>
+
+    <rect x="398" y="522" width="278" height="72" rx="6" fill="#fff" stroke="#d0d0cc"/>
+    <text x="412" y="542">GetLibraryById</text>
+    <text x="412" y="560" class="mono">GET /api/libraries/{id}</text>
+    <text x="412" y="576" class="muted small">200 · 404</text>
+
+    <rect x="398" y="604" width="278" height="72" rx="6" fill="#fff" stroke="#d0d0cc"/>
+    <text x="412" y="624">CreateLibrary</text>
+    <text x="412" y="642" class="mono">POST /api/libraries</text>
+    <text x="412" y="658" class="muted small">200 + body con id</text>
+
+    <rect x="398" y="686" width="278" height="72" rx="6" fill="#fff" stroke="#d0d0cc"/>
+    <text x="412" y="706">UpdateLibrary</text>
+    <text x="412" y="724" class="mono">PUT /api/libraries/{id}</text>
+    <text x="412" y="740" class="muted small">204 · 404</text>
+
+    <rect x="398" y="768" width="278" height="90" rx="6" fill="#fff" stroke="#2f6fed" stroke-width="1.5"/>
+    <text x="412" y="788">DeleteLibrary</text>
+    <text x="412" y="806" class="mono">DELETE /api/libraries/{id}</text>
+    <text x="412" y="822" class="muted small">204 · 404 · cascade books</text>
+  </g>
+
+  <!-- Books column -->
+  <rect x="708" y="400" width="332" height="478" rx="8" fill="#f7f7f5" stroke="#d0d0cc"/>
+  <text x="724" y="424" class="h">Books</text>
+  <rect x="724" y="440" width="300" height="120" rx="6" fill="#fff" stroke="#2f6fed" stroke-width="1.5"/>
+  <text x="738" y="462" class="label">GetBooksByLibrary</text>
+  <text x="738" y="480" class="mono">GET /api/libraries/{id}/books</text>
+  <text x="738" y="498" class="muted small">RequireAuthorization (JWT)</text>
+  <text x="738" y="514" class="muted small">200 lista (puede ser vacía)</text>
+  <text x="738" y="530" class="muted small">404 si la library no existe</text>
+  <text x="738" y="546" class="muted small">401 sin token</text>
+
+  <rect x="724" y="576" width="300" height="104" rx="6" fill="#fff" stroke="#2f6fed" stroke-width="1.5"/>
+  <text x="738" y="598" class="label">AddBookToLibrary</text>
+  <text x="738" y="616" class="mono">POST /api/libraries/{id}/books</text>
+  <text x="738" y="634" class="muted small">anonymous (igual que antes)</text>
+  <text x="738" y="650" class="muted small">201 created · 404 si no hay library</text>
+
+  <text x="724" y="710" class="muted small">Update/Delete de books no tienen</text>
+  <text x="724" y="726" class="muted small">ruta HTTP (fuera de alcance).</text>
+
+  <line x1="550" y1="900" x2="550" y2="928" stroke="#1a1a1a" stroke-width="1.5"/>
+
+  <!-- Shared -->
+  <rect x="40" y="932" width="1020" height="150" rx="8" fill="#fff" stroke="#d0d0cc"/>
+  <text x="56" y="956" class="h">Shared  kernel (no es una capa de aplicación)</text>
+  <rect x="56" y="972" width="310" height="90" rx="6" fill="#f0f0ec" stroke="#d0d0cc"/>
+  <text x="72" y="996" class="label">Endpoints</text>
+  <text x="72" y="1014" class="mono">IEndpoint</text>
+  <text x="72" y="1030" class="muted small">Add / MapFeatureEndpoints</text>
+  <text x="72" y="1046" class="muted small">descubrimiento por assembly</text>
+
+  <rect x="382" y="972" width="310" height="90" rx="6" fill="#f0f0ec" stroke="#d0d0cc"/>
+  <text x="398" y="996" class="label">Auth</text>
+  <text x="398" y="1014" class="mono">JwtSettings</text>
+  <text x="398" y="1030" class="muted small">AddJwtBearer + CORS + Swagger</text>
+  <text x="398" y="1046" class="muted small">AddDbContextPool Npgsql</text>
+
+  <rect x="708" y="972" width="332" height="90" rx="6" fill="#f0f0ec" stroke="#d0d0cc"/>
+  <text x="724" y="996" class="label">Data</text>
+  <text x="724" y="1014" class="mono">LibraryContext · Book · Library</text>
+  <text x="724" y="1030" class="muted small">FK Books ’ Libraries CASCADE</text>
+  <text x="724" y="1046" class="muted small">namespace LibraryService.WebAPI.Data</text>
+
+  <line x1="550" y1="1082" x2="550" y2="1110" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- DB -->
+  <ellipse cx="550" cy="1168" rx="160" ry="36" fill="#2f6fed"/>
+  <text x="550" y="1164" class="white label" text-anchor="middle">PostgreSQL</text>
+  <text x="550" y="1182" class="white small" text-anchor="middle">migraciones EF existentes, sin cambio de schema</text>
+
+  <text x="40" y="1256" class="muted small">Borde azul = slices nuevos o que completan stubs. Fuente portable: docs/arquitectura-vertical-slice.mmd (Mermaid).</text>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1a1a1a"/>
+    </marker>
+  </defs>
+</svg>
