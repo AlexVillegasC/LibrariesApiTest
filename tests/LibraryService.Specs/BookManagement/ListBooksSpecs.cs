@@ -1,3 +1,5 @@
+using System.Net.Http.Headers;
+
 namespace LibraryService.Specs.BookManagement;
 
 public class ListBooksSpecs : SpecFixture
@@ -62,5 +64,27 @@ public class ListBooksSpecs : SpecFixture
 
         // Then
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Expired_L1_is_forbidden()
+    {
+        var library = await Api.CreateLibraryAsync();
+        await AuthClient.AuthenticateAsAdminAsync(Api.Client);
+        var (email, tokens) = await AuthClient.RegisterAndLoginL1Async(Api.CreateAnonymousClient());
+        var users = await Api.Client.GetFromJsonAsync<List<UserDto>>("/users", Json.Options);
+        var l1 = users!.Single(u => u.Email == email);
+
+        var expire = await Api.Client.PatchAsJsonAsync(
+            $"/users/{l1.Id}/subscription",
+            new { subscriptionExpirationDate = DateTimeOffset.UtcNow.AddDays(-1) },
+            Json.Options);
+        expire.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var l1Client = Api.CreateAnonymousClient();
+        l1Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        var response = await l1Client.GetAsync($"/api/libraries/{library.Id}/books");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 }

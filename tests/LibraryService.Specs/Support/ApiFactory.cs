@@ -24,7 +24,7 @@ public sealed class ApiFactory : IAsyncDisposable
             .Options);
 
         _context.Database.OpenConnection();
-        _context.Database.Migrate();
+        _context.Database.EnsureCreated();
 
         foreach (var entity in _context.ChangeTracker.Entries().ToList())
             entity.State = EntityState.Detached;

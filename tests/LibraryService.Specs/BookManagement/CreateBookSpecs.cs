@@ -1,3 +1,5 @@
+using System.Net.Http.Headers;
+
 namespace LibraryService.Specs.BookManagement;
 
 public class CreateBookSpecs : SpecFixture
@@ -55,5 +57,21 @@ public class CreateBookSpecs : SpecFixture
 
         // Then
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Active_L1_can_create_a_book()
+    {
+        var library = await Api.CreateLibraryAsync();
+        var (_, tokens) = await AuthClient.RegisterAndLoginL1Async(Api.Client);
+        var l1 = Api.CreateAnonymousClient();
+        l1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+
+        var response = await l1.PostAsJsonAsync(
+            $"/api/libraries/{library.Id}/books",
+            new { name = "L1 book", category = "Fiction" },
+            Json.Options);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
     }
 }

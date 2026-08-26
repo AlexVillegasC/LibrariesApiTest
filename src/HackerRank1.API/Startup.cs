@@ -2,18 +2,16 @@ using LibraryService.Modules.Auth;
 using LibraryService.Modules.Books;
 using LibraryService.Modules.Libraries;
 using LibraryService.SharedKernel.Data;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
-using System.Text;
 
 namespace LibraryService.Api
 {
@@ -26,50 +24,9 @@ namespace LibraryService.Api
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // 1. jwtSettings binding
-            var jwtSettings = Configuration
-                                .GetSection("JwtSettings")
-                                .Get<JwtSettings>()
-                                ?? throw new InvalidOperationException("Invalid JWT Settings");
-
-            // 2. Registro de DI
-
-            services.AddSingleton(jwtSettings);
-            services.AddScoped<IAuthenticationService, AuthenticationService>();
-
-            // 3. Configurar Authenticacion
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(option =>
-                {
-                    option.TokenValidationParameters = new TokenValidationParameters()
-                    {
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
-
-                        ValidateIssuer = true,
-                        ValidIssuer = jwtSettings.Issuer,
-
-                        ValidateAudience = true,
-                        ValidAudience = jwtSettings.Audience,
-
-                        ValidateLifetime = true,
-                        ClockSkew = TimeSpan.Zero
-                    };
-                });
-
-            // 4. Configurar Autorizacion
-            services.AddAuthorization();
-
-            // 5. Configurar CORS para el FE (Vite dev server)
-            services.AddCors(o => o.AddPolicy("Frontend", p => p
-                .WithOrigins("http://localhost:5173")
-                .AllowAnyHeader()
-                .AllowAnyMethod()));
-
-            services.AddDbContextPool<LibraryContext>(options =>
+            services.AddDbContext<LibraryContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"), npgsqlOptions =>
                 {
                     npgsqlOptions.EnableRetryOnFailure(
@@ -78,11 +35,16 @@ namespace LibraryService.Api
                         errorCodesToAdd: null);
                 })
                 .ConfigureWarnings(warnings =>
-                    warnings.Ignore(RelationalEventId.PendingModelChangesWarning)),
-                poolSize: 20);
+                    warnings.Ignore(RelationalEventId.PendingModelChangesWarning)));
+
+            services.AddAuth();
             services.AddLibraries();
             services.AddBooks();
             services.AddControllers();
+            services.AddCors(o => o.AddPolicy("Frontend", p => p
+                .WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
+                .AllowAnyHeader()
+                .AllowAnyMethod()));
             services.AddOpenApi(options =>
             {
                 options.CreateSchemaReferenceId = info =>
@@ -103,10 +65,11 @@ namespace LibraryService.Api
             });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
+            var isLocalDev = env.IsDevelopment() || env.IsEnvironment("Local");
+
+            if (isLocalDev)
             {
                 app.UseDeveloperExceptionPage();
             }
@@ -114,14 +77,17 @@ namespace LibraryService.Api
             using (var scope = app.ApplicationServices.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<LibraryContext>();
-                db.Database.Migrate();
+                if (db.Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")
+                    db.Database.EnsureCreated();
+                else
+                    db.Database.Migrate();
+                var roles = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                IdentitySeed.EnsureRolesAsync(roles).GetAwaiter().GetResult();
+                CatalogSeed.EnsureAsync(db).GetAwaiter().GetResult();
             }
 
             app.UseRouting();
-
             app.UseCors("Frontend");
-
-            // Agregar los metodos de Auth al Middleware Pipeline.
             app.UseAuthentication();
             app.UseAuthorization();
 
@@ -131,7 +97,7 @@ namespace LibraryService.Api
                 endpoints.MapLibraries();
                 endpoints.MapBooks();
 
-                if (env.IsDevelopment())
+                if (isLocalDev)
                 {
                     endpoints.MapOpenApi();
                     endpoints.MapScalarApiReference();

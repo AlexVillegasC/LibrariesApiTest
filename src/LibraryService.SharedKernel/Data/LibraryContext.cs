@@ -1,9 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace LibraryService.SharedKernel.Data
 {
-    public class LibraryContext : DbContext
+    public class LibraryContext : IdentityDbContext<ApplicationUser>
     {
         public LibraryContext(DbContextOptions<LibraryContext> options)
             : base(options)
