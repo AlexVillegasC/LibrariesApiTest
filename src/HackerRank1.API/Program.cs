@@ -7,6 +7,7 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        DotEnv.Load();
         CreateHostBuilder(args).Build().Run();
     }
 

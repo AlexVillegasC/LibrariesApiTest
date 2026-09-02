@@ -24,10 +24,25 @@ namespace LibraryService.Api
 
         public IConfiguration Configuration { get; }
 
+        private string ResolveConnectionString()
+        {
+            var connectionString = Configuration.GetConnectionString("DefaultConnection");
+            if (string.IsNullOrWhiteSpace(connectionString))
+                connectionString = Configuration["CONNECTION_STRING"];
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException(
+                    "Database connection is not configured. Set CONNECTION_STRING or ConnectionStrings__DefaultConnection in .env.local / .env.development (see the .env.*.example files).");
+            }
+
+            return connectionString;
+        }
+
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<LibraryContext>(options =>
-                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"), npgsqlOptions =>
+                options.UseNpgsql(ResolveConnectionString(), npgsqlOptions =>
                 {
                     npgsqlOptions.EnableRetryOnFailure(
                         maxRetryCount: 1,

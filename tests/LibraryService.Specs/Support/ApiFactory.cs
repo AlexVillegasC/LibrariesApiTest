@@ -1,5 +1,6 @@
 using LibraryService.Api;
 using LibraryService.SharedKernel.Data;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -31,6 +32,9 @@ public sealed class ApiFactory : IAsyncDisposable
 
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
+            builder.UseSetting(
+                "ConnectionStrings:DefaultConnection",
+                "Host=127.0.0.1;Database=unused;Username=unused;Password=unused");
             builder.ConfigureServices(services =>
             {
                 services.RemoveAll(typeof(LibraryContext));

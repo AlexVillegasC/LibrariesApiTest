@@ -26,6 +26,9 @@ services:
     container_name: libraryservice-api
     env_file:
       - .env.local
+    environment:
+      CONNECTION_STRING: Host=postgres;Port=5432;Database=libraryservice;Username=library;Password=library
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=libraryservice;Username=library;Password=library
     ports:
       - "8080:8080"
     depends_on:
